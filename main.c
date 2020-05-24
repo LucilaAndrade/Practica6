@@ -12,16 +12,15 @@ struct Persona {
     int peso;
 };
 
-struct Nodo {
+struct Lista {
     struct Persona persona;
-    struct Nodo *siguiente;
+    struct Lista *siguiente;
 };
 
-
-int nacimiento(struct Nodo *lista, int year);
-
+struct Lista *nacimiento(struct Lista *lista, int year);
+struct Lista *insertar(struct Lista *lista, struct Persona persona);
+int imprimirLista(struct Lista *lista);
 int imprimirPersona(struct Persona persona);
-int imprmirListaDePersonas(struct Nodo *lista);
 
 int StringIsAlnum(char string[]);
 
@@ -30,9 +29,10 @@ int LeerCadena(int lenght, char mensaje[], char cadena[]);
 
 int main() {
     int op;
-    int currentYear=2020;
-    struct Nodo *lista = NULL;
-    while(op!=4) {
+    int currentYear = 2020;
+    struct Lista *lista;
+    lista = NULL;
+    while (op != 4) {
         printf("[1] Nuevo nacimiento\n"
                "[2] Avanzar tiempo\n"
                "[3] Consultas\n"
@@ -42,32 +42,12 @@ int main() {
         scanf("%d", &op);
         switch (op) {
             case 1:
-                switch (nacimiento(lista, currentYear)){
-                    case -1://codigo NOMBRE VACIO
-                    case -2:
-                    printf("Nombre no valido\n");
-                    break;
-
-                    case -3://codigo PESO NEGATIVO
-                    case -4://codigo PESO EXCESIVO
-                    printf("Peso no valido\n");
-                        break;
-
-                    case -5://codigo ESTATURA NEGATIVA
-                    case -6://codigo ALTURA EXCESIVO
-                        printf("Estatura no valida");
-                        break;
-
-                    case -7://codigo CLAVE VACIA
-                    case  -8://codigo CLAVE NO VALIDA
-                        printf("Clave no valida");
-                        break;
-                }
+                lista = nacimiento(lista, currentYear);
                 break;
             case 2:
                 break;
             case 3:
-                imprmirListaDePersonas(lista);
+                imprimirLista(lista);
                 break;
             case 4:
                 free(lista);
@@ -82,80 +62,87 @@ int main() {
     return 0;
 }
 
-int nacimiento(struct Nodo *lista, int year) {
+struct Lista *nacimiento(struct Lista *lista, int year) {
     struct Persona persona;
     int peso;
     int estatura;
     char id[10];
     char nombre[50];
     int resultado;
-    struct Nodo *nuevo;
-
+    struct Lista *nuevo = NULL;
+    int error = 0;
     if (LeerCadena(50, "Ingrese el nombre de la persona: ", nombre) == -1) {
-        return -1;//codigo NOMBRE VACIO
+        error = -1;//codigo NOMBRE VACIO
+        printf("Nombre no valido\n");
     }
     resultado = StringIsAlnum(nombre);
     if (resultado == 4 || resultado == 1) {
 
         if (LeerEnteroPositivo("Ingrese el peso en kg: ", &peso) == -1) {
-            return -3;//codigo PESO NEGATIVO
+            error = -3;//codigo PESO NEGATIVO
+            printf("Peso no valido\n");
         }
         if (peso > 100) {
-            return -4;//codigo PESO EXCESIVO
+            error = -4;//codigo PESO EXCESIVO
+            printf("Peso no valido\n");
         }
 
         if (LeerEnteroPositivo("Ingrese al estatura en cm: ", &estatura) == -1) {
-            return -5;//codigo ESTATURA NEGATIVA
+            error = -5;//codigo ESTATURA NEGATIVA
+            printf("Estatura no valida\n");
         }
         if (estatura > 200) {
-            return -6;//codigo ALTURA EXCESIVO
+            error = -6;//codigo ALTURA EXCESIVO
+            printf("Estatura no valida\n");
         }
 
         if (LeerCadena(50, "La clave de la persona: ", id) == -1) {
-            return -7;//codigo CLAVE VACIA
+            error = -7;//codigo CLAVE VACIA
+            printf("Clave no valida\n");
         }
         resultado = StringIsAlnum(id);
         if (resultado != 3) {//ALFANUMERICA
-            return -8;//codigo CLAVE NO VALIDA
+            error = -8;//codigo CLAVE NO VALIDA
+            printf("Clave no valida\n");
         }
+    } else {
+        error = -2;//codigo NOMBRE NO VALIDO
+        printf("Nombre no valido\n");
+    }
+    if (error == 0) {
         strcpy(persona.id, id);
         strcpy(persona.nombre, nombre);
         persona.yearOfBirth = year;
         persona.peso = peso;
         persona.estatura = estatura;
         persona.edad = 0;
-
-        lista = (struct Nodo *) malloc(sizeof(struct Nodo));
-        if(lista==NULL){
-            lista->siguiente=NULL;
-            lista->persona=persona;
-            printf("inicio ID:%s Nombre:%s Edad:%d Estatura:%d Peso:%d Nacimiento:%d\n",persona.id,persona.nombre,persona.edad,persona.estatura,persona.peso,persona.yearOfBirth);
-            printf("inicio ID:%s Nombre:%s Edad:%d Estatura:%d Peso:%d Nacimiento:%d\n",lista->persona.id,lista->persona.nombre,lista->persona.edad,lista->persona.estatura,lista->persona.peso,lista->persona.yearOfBirth);
-
-        }else{
-            printf("New ID:%s Nombre:%s Edad:%d Estatura:%d Peso:%d Nacimiento:%d\n",persona.id,persona.nombre,persona.edad,persona.estatura,persona.peso,persona.yearOfBirth);
-            printf("New ID:%s Nombre:%s Edad:%d Estatura:%d Peso:%d Nacimiento:%d\n",lista->persona.id,lista->persona.nombre,lista->persona.edad,lista->persona.estatura,lista->persona.peso,lista->persona.yearOfBirth);
-
-            nuevo->persona=persona;
-            nuevo->siguiente=NULL;
-            lista->siguiente= nuevo;}
-    } else {
-        return -2;//codigo NOMBRE NO VALIDO
+        return insertar(lista, persona);
     }
-
+    return lista;
+}
+struct Lista *insertar(struct Lista *lista, struct Persona persona) {
+    struct Lista *aux = malloc(sizeof(struct Lista)); //Crear un nuevo nodo.
+    aux->persona = persona; //Asignar el valor al nodo.
+    aux->siguiente = lista; //Apuntar el nodo al nodo que apuntaba la lista.
+    lista = aux; //Hacer que la lista apunte al nodo nuevo.
+    printf("%s registrado con exito\n", persona.id); //Escribir en pantalla que se agregó el valor a la lista.
+    return lista;
 }
 
-int imprimirPersona(struct Persona persona){
-    printf("ID:%s Nombre:%s Edad:%d Estatura:%d Peso:%d Nacimiento:%d\n",persona.id,persona.nombre,persona.edad,persona.estatura,persona.peso,persona.yearOfBirth);
-}
-
-int imprmirListaDePersonas(struct Nodo *lista){
-    if(lista!=NULL) {
-        // while(lista->siguiente!=NULL){
+int imprimirLista(struct Lista *lista) {
+    int i = 0;
+    if (lista != NULL) {
+        i = 1;
         imprimirPersona(lista->persona);
-        //}
+        imprimirLista(lista->siguiente);
     }
+    return i;
 }
+int imprimirPersona(struct Persona persona) {
+    printf("ID:%s Nombre:%s Edad:%d Estatura:%d Peso:%d Nacimiento:%d\n", persona.id, persona.nombre, persona.edad,
+           persona.estatura, persona.peso, persona.yearOfBirth);
+}
+
 int LeerEnteroPositivo(char mensaje[], int *numero) {
     int n = *numero;
     printf("%s ", mensaje);
@@ -167,7 +154,6 @@ int LeerEnteroPositivo(char mensaje[], int *numero) {
         return 0;
     }
 }
-
 int LeerCadena(int lenght, char mensaje[], char cadena[]) {
     char tmp[lenght];
     cadena[0] = tmp[0] = '\0';
@@ -180,23 +166,6 @@ int LeerCadena(int lenght, char mensaje[], char cadena[]) {
     } else if (tmp[0] == '\0') { return -1; }
 }
 
-int LeerFlotantePositivo(char mensaje[], float *numero) {
-    float n = *numero;
-    printf("%s ", mensaje);
-    scanf("%f", numero);
-    if (*numero >= 0) {
-        return 1;
-    } else {
-        *numero = n;
-        return 0;
-    }
-}
-
-//1 alfabetico
-//2 numerico
-//3 alfanumerico
-//4 alfabetico con espacios
-//0 otro
 int StringIsAlnum(char string[]) {
     int alpha = 0;
     int space = 0;
