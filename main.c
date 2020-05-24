@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 
 struct Persona {
     char nombre[50];
@@ -18,6 +19,7 @@ struct Lista {
 };
 
 struct Lista *nacimiento(struct Lista *lista, int year);
+struct Lista * envejecerPoblacion(struct Lista *lista,int years);
 struct Lista *insertar(struct Lista *lista, struct Persona persona);
 int imprimirLista(struct Lista *lista);
 int imprimirPersona(struct Persona persona);
@@ -32,6 +34,7 @@ int main() {
     int currentYear = 2020;
     struct Lista *lista;
     lista = NULL;
+    srand(time(NULL));
     while (op != 4) {
         printf("[1] Nuevo nacimiento\n"
                "[2] Avanzar tiempo\n"
@@ -128,7 +131,29 @@ struct Lista *insertar(struct Lista *lista, struct Persona persona) {
     printf("%s registrado con exito\n", persona.id); //Escribir en pantalla que se agregó el valor a la lista.
     return lista;
 }
-
+struct Lista *avanzarTiempo(struct Lista *lista, int *years,int yearsUp){
+    (*years)+=yearsUp;
+    return envejecerPoblacion(lista,yearsUp);
+}
+struct Lista * envejecerPoblacion(struct Lista *lista,int years){
+        int i = 0;
+        int aumentoCM;
+        int aumentoKG;
+        if (lista != NULL) {
+            i = 1;
+            aumentoCM= years* (rand() % (6 - 0)) + 0;
+            aumentoKG= years* (rand() % (11 - 0)) + 0;
+            if(lista->persona.peso+aumentoKG<=100){
+                lista->persona.peso+=aumentoKG;
+            }
+            if(lista->persona.estatura+aumentoCM<=200){
+                lista->persona.estatura+=aumentoCM;
+            }
+            lista->persona.edad+=years;
+            envejecerPoblacion(lista->siguiente,years);
+        }
+        return lista;
+}
 int imprimirLista(struct Lista *lista) {
     int i = 0;
     if (lista != NULL) {
