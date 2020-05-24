@@ -20,8 +20,14 @@ struct Lista {
 
 struct Lista *nacimiento(struct Lista *lista, int year);
 struct Lista * envejecerPoblacion(struct Lista *lista,int years);
+
 struct Lista *insertar(struct Lista *lista, struct Persona persona);
-int imprimirLista(struct Lista *lista);
+
+int consultaGeneral(struct Lista *lista);
+
+int consultaPorID(struct Lista *lista, char id[10], int mostrar);
+int consultaPromedios(struct Lista *lista,double *promEdad,double *promEstatura,
+                      double *promPeso,int edad, int estatura, double peso,int *i);
 int imprimirPersona(struct Persona persona);
 
 int StringIsAlnum(char string[]);
@@ -30,10 +36,16 @@ int LeerEnteroPositivo(char mensaje[], int *numero);
 int LeerCadena(int lenght, char mensaje[], char cadena[]);
 
 int main() {
-    int op;
+    int op, op2;
     int currentYear = 2020;
     struct Lista *lista;
     lista = NULL;
+    int index;
+    char clave[10];
+
+    double promEdad=0,promEstatura=0,promPeso=0;
+    int edad=0, estatura=0,peso=0,i=0;
+
     srand(time(NULL));
     while (op != 4) {
         printf("[1] Nuevo nacimiento\n"
@@ -50,7 +62,29 @@ int main() {
             case 2:
                 break;
             case 3:
-                imprimirLista(lista);
+                printf("[1]... Consulta General.\n"
+                       "[2]... Consulta por clave de identificación.\n"
+                       "[3]... Mostrar el promedio de edad, estatura y peso.\n"
+                       "[4]... Consulta general de personas eliminadas.");
+                scanf("%d", &op2);
+                switch (op2) {
+                    case 1:
+                        consultaGeneral(lista);
+                        break;
+                    case 2:
+                        if (LeerCadena(10, "Ingrese la clave de identificacion: ", clave) == -1) {
+                            printf("Clave no valida\n");
+                        } else if (consultaPorID(lista, clave, 1) == -1) {
+                            printf("La clave de identificacion no ha sido registrada\n");
+                        }
+                        break;
+                    case 3:
+                        promEdad=promEstatura=promPeso=edad=estatura=peso=0;
+                        i=0;
+                        consultaPromedios(lista,&promEdad,&promEstatura,&promPeso, edad, estatura,peso,&i);
+                        printf("Peso:%.2f,Estatura:%.2f,Edad:%.2f\n",promPeso,promEstatura,promEdad);
+                        break;
+                }
                 break;
             case 4:
                 free(lista);
@@ -102,6 +136,9 @@ struct Lista *nacimiento(struct Lista *lista, int year) {
         if (LeerCadena(50, "La clave de la persona: ", id) == -1) {
             error = -7;//codigo CLAVE VACIA
             printf("Clave no valida\n");
+        } else if (consultaPorID(lista, id, 0) != -1) {
+            printf("Clave registrada con anterioridad\n");
+            error =-9;
         }
         resultado = StringIsAlnum(id);
         if (resultado != 3) {//ALFANUMERICA
@@ -123,6 +160,7 @@ struct Lista *nacimiento(struct Lista *lista, int year) {
     }
     return lista;
 }
+
 struct Lista *insertar(struct Lista *lista, struct Persona persona) {
     struct Lista *aux = malloc(sizeof(struct Lista)); //Crear un nuevo nodo.
     aux->persona = persona; //Asignar el valor al nodo.
@@ -155,14 +193,51 @@ struct Lista * envejecerPoblacion(struct Lista *lista,int years){
         return lista;
 }
 int imprimirLista(struct Lista *lista) {
+
+int consultaGeneral(struct Lista *lista) {
     int i = 0;
     if (lista != NULL) {
         i = 1;
         imprimirPersona(lista->persona);
-        imprimirLista(lista->siguiente);
+        consultaGeneral(lista->siguiente);
     }
     return i;
 }
+
+int consultaPorID(struct Lista *lista, char id[10], int mostrar) {
+    int i = 0;
+    if (lista != NULL) {
+        i = 1;
+        if (strcmp(lista->persona.id, id) == 0) {
+            if (mostrar == 1) {
+                imprimirPersona(lista->persona);
+            }
+            return i;
+        }
+        consultaPorID(lista->siguiente,id,mostrar);
+    }
+    return -1;
+}
+
+int consultaPromedios(struct Lista *lista,double *promEdad,double *promEstatura,
+        double *promPeso,int edad, int estatura, double peso,int *i) {
+    if (lista != NULL) {
+        (*i)+=1;
+        (*promEdad)+=lista->persona.edad+edad;
+        (*promEstatura)+=lista->persona.estatura+estatura;
+        (*promPeso)+=lista->persona.peso+peso;
+        consultaPromedios(lista->siguiente,promEdad,promEstatura,
+        promPeso,edad, estatura,peso,i);
+    }else {
+        (*promEdad) = (*promEdad) / (*i);
+        (*promEstatura) = (*promEstatura) / (*i);
+        (*promPeso) = (*promPeso) / (*i);
+        return *i;
+    }
+
+}
+
+
 int imprimirPersona(struct Persona persona) {
     printf("ID:%s Nombre:%s Edad:%d Estatura:%d Peso:%d Nacimiento:%d\n", persona.id, persona.nombre, persona.edad,
            persona.estatura, persona.peso, persona.yearOfBirth);
@@ -179,6 +254,7 @@ int LeerEnteroPositivo(char mensaje[], int *numero) {
         return 0;
     }
 }
+
 int LeerCadena(int lenght, char mensaje[], char cadena[]) {
     char tmp[lenght];
     cadena[0] = tmp[0] = '\0';
